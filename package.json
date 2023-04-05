@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:dev": "nodemon src/server.ts",
-    "start": "node server.js"
+    "start": "node server.js",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier-eslint 'server/**/*.{js,json}' --write"
   },
   "repository": {
     "type": "git",
@@ -28,7 +30,12 @@
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/node": "^18.15.11",
+    "eslint": "^8.37.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-promise": "^6.1.1",
     "prettier": "^2.8.7",
+    "prettier-eslint-cli": "^7.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.3"
   }
