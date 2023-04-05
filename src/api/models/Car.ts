@@ -6,7 +6,7 @@ export interface ICar {
   year: string;
   value_per_day: number;
   accessories: { description: string }[];
-  number_of_passenger: number;
+  number_of_passengers: number;
 }
 
 const carSchema: Schema = new Schema<ICar>({
@@ -61,11 +61,9 @@ const carSchema: Schema = new Schema<ICar>({
     ],
     required: [true, 'A car must have at least one accessory']
   },
-  number_of_passenger: {
+  number_of_passengers: {
     type: Number,
-    required: [true, 'A car must have a number of passenger'],
-    min: [1, 'A car must have at least one passenger'],
-    max: [20, 'A car can have at most 20 passengers']
+    required: [true, 'A car must have a number of passengers']
   }
 });
 
