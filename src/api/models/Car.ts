@@ -59,12 +59,22 @@ const carSchema: Schema = new Schema<ICar>({
         }
       }
     ],
-    required: [true, 'A car must have at least one accessory']
+    required: [true, 'A car must have at least one accessory'],
+    validate: {
+      validator: function (accessories: { description: string }[]) {
+        const uniqueDescriptions = new Set(
+          accessories.map((accessory) => accessory.description)
+        );
+        return uniqueDescriptions.size === accessories.length;
+      },
+      message: 'Creation of a car with two identical accessories is not allowed.'
+    }
   },
   number_of_passengers: {
     type: Number,
-    required: [true, 'A car must have a number of passengers']
-  }
+    required: [true, 'A car must have a number of passengers'],
+    max: [8, 'The number of passengers in a car must be at most 8']
+  }  
 });
 
 const Car = model<ICar>('Car', carSchema);

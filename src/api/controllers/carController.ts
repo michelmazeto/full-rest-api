@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Car, { ICar } from '../models/Car';
+import APIError from '../../utils/APIError';
 
 export async function createCar(req: Request, res: Response) {
   try {
@@ -9,6 +10,6 @@ export async function createCar(req: Request, res: Response) {
     res.status(201).json(savedCar);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Erro ao criar o carro.");
+    APIError.handleErrorResponse(res, err);
   }
 }
