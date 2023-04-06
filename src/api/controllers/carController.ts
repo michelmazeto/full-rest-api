@@ -42,3 +42,24 @@ export const listAllCars = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ error: 'Error listing cars.' });
   }
 };
+
+export const deleteCar = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const carId: string = req.params.id;
+
+    if (!carId) {
+      res.status(400).json({ error: 'Car ID is required.' });
+      return;
+    }
+
+    const car: ICar | null = await Car.findByIdAndDelete(carId);
+
+    if (car) {
+      res.status(200).send();
+    } else {
+      res.status(404).json({ message: 'Car not found.' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Error deleting car.' });
+  }
+};
