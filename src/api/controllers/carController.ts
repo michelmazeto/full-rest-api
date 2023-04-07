@@ -90,3 +90,25 @@ export const updateCar = async (req: Request, res: Response): Promise<void> => {
     APIError.handleErrorResponse(res, err);
   }
 };
+
+export const getCarById = async (req: Request, res: Response): Promise<void> => {
+  const carId = req.params.id;
+
+  try {
+    if (!isValidObjectId(carId)) {
+      res.status(404).json({ message: 'Car not found' });
+      return;
+    }
+
+    const car: ICar | null = await Car.findById(carId);
+
+    if (!car) {
+      res.status(404).json({ message: 'Car not found' });
+      return;
+    }
+
+    res.status(200).json(car);
+  } catch (err) {
+    APIError.handleErrorResponse(res, err);
+  }
+};

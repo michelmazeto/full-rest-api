@@ -1,12 +1,15 @@
 import express from 'express';
-import { createCar, listAllCars, deleteCar, updateCar } from '../controllers/carController';
-
+import { createCar, listAllCars, deleteCar, updateCar, getCarById } from '../controllers/carController';
 
 const carRouter = express.Router();
 
-carRouter.post('/', createCar);
-carRouter.get('/', listAllCars);
-carRouter.delete('/:id', deleteCar);
-carRouter.patch('/:id', updateCar);
+carRouter.route('/')
+  .post(createCar)
+  .get(listAllCars);
+
+carRouter.route('/:id')
+  .delete(deleteCar)
+  .patch(updateCar)
+  .get(getCarById);
 
 export default carRouter;
