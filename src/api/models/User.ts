@@ -1,14 +1,20 @@
 import { Schema, model } from 'mongoose';
 import { validateCPF } from '../services/validateCPF';
+import { viaCep } from '../services/CEP';
 
 export interface IUser {
-  name: string;
-  cpf: string;
-  birth: string;
-  email: string;
-  password: string;
-  qualified: 'yes' | 'no';
-}
+    name: string;
+    cpf: string;
+    birth: string;
+    email: string;
+    password: string;
+    qualified: 'yes' | 'no';
+    cep: string;
+    logradouro: string;
+    bairro: string;
+    cidade: string;
+    uf: string;
+  }
 
 const userSchema: Schema = new Schema<IUser>({
   name: {
@@ -62,8 +68,18 @@ const userSchema: Schema = new Schema<IUser>({
     type: String,
     required: [true, 'A user must have a qualified field'],
     enum: ['yes', 'no']
-  }
+  },
+  cep: {
+    type: String,
+    required: [true, 'A user must have a CEP']
+  },
+  logradouro: String,
+  bairro: String,
+  cidade: String,
+  uf: String
 });
+
+userSchema.pre<IUser>('save', viaCep);
 
 const User = model<IUser>('User', userSchema);
 
