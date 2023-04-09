@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 import { validateCPF } from '../services/validateCPF';
 import { viaCep } from '../services/CEP';
+import validator from 'validator';
 
 export interface IUser {
     name: string;
@@ -14,6 +15,7 @@ export interface IUser {
     bairro: string;
     cidade: string;
     uf: string;
+    viaCep: () => Promise<void>;
   }
 
 const userSchema: Schema = new Schema<IUser>({
@@ -53,7 +55,6 @@ const userSchema: Schema = new Schema<IUser>({
     trim: true,
     validate: {
       validator: function (value: string) {
-        const validator = require('validator');
         return validator.isEmail(value);
       },
       message: 'Invalid email address'
@@ -67,19 +68,38 @@ const userSchema: Schema = new Schema<IUser>({
   qualified: {
     type: String,
     required: [true, 'A user must have a qualified field'],
-    enum: ['yes', 'no']
+    enum: ['yes', 'no'],
+    validate: {
+        validator: function (value: string) {
+          return value !== 'no';
+        },
+        message: 'Must be qualified'
+      }
   },
   cep: {
     type: String,
-    required: [true, 'A user must have a CEP']
+    required: [true, 'A user must have a CEP'],
+    trim: true
   },
-  logradouro: String,
-  bairro: String,
-  cidade: String,
-  uf: String
+  logradouro: {
+    type: String,
+    trim: true
+  },
+  bairro: {
+    type: String,
+    trim: true
+  },
+  cidade: {
+    type: String,
+    trim: true
+  },
+  uf: {
+    type: String,
+    trim: true
+  }
 });
 
-userSchema.pre<IUser>('save', viaCep);
+userSchema.methods.viaCep = viaCep;
 
 const User = model<IUser>('User', userSchema);
 
