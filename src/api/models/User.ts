@@ -2,21 +2,23 @@ import { Schema, model } from 'mongoose';
 import { validateCPF } from '../services/validateCPF';
 import { viaCep } from '../services/CEP';
 import validator from 'validator';
+import bcrypt from 'bcrypt';
 
 export interface IUser {
-    name: string;
-    cpf: string;
-    birth: string;
-    email: string;
-    password: string;
-    qualified: 'yes' | 'no';
-    cep: string;
-    logradouro: string;
-    bairro: string;
-    cidade: string;
-    uf: string;
-    viaCep: () => Promise<void>;
-  }
+  name: string;
+  cpf: string;
+  birth: string;
+  email: string;
+  password: string;
+  correctPassword(candidatePassword: string): Promise<boolean>;
+  qualified: 'yes' | 'no';
+  cep: string;
+  logradouro: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  viaCep: () => Promise<void>;
+}
 
 const userSchema: Schema = new Schema<IUser>({
   name: {
@@ -63,18 +65,25 @@ const userSchema: Schema = new Schema<IUser>({
   password: {
     type: String,
     required: [true, 'A user must have a password'],
-    minlength: [6, 'A user password must have at least 6 characters']
+    minlength: [8, 'A user password must have more or equal then 8 characters'],
+    validate: {
+      validator: function (password: string) {
+        return !password.includes(' ');
+      },
+      message: 'The password must not contain whitespaces'
+    },
+    select: false
   },
   qualified: {
     type: String,
     required: [true, 'A user must have a qualified field'],
     enum: ['yes', 'no'],
     validate: {
-        validator: function (value: string) {
-          return value !== 'no';
-        },
-        message: 'Must be qualified'
-      }
+      validator: function (value: string) {
+        return value !== 'no';
+      },
+      message: 'Must be qualified'
+    }
   },
   cep: {
     type: String,
@@ -98,6 +107,18 @@ const userSchema: Schema = new Schema<IUser>({
     trim: true
   }
 });
+
+userSchema.pre('save', async function (next) {
+  if (!this.isNew) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+userSchema.methods.correctPassword = async function (
+  candidatePassword: string
+) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 userSchema.methods.viaCep = viaCep;
 
