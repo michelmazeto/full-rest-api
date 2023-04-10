@@ -67,69 +67,160 @@ export const createReserve = async (req: Request, res: Response) => {
 };
 
 export const listAllReserves = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const queryParams: any = req.query;
-      const limit: number = parseInt(queryParams.limit) || 100;
-      const offset: number = parseInt(queryParams.offset) || 1;
-  
-      const query: any = {};
-      if (queryParams.start_date) {
-        query.start_date = { $gte: new Date(queryParams.start_date) };
-      }
-      if (queryParams.end_date) {
-        query.end_date = { $lte: new Date(queryParams.end_date) };
-      }
-      if (queryParams.id_car) {
-        query.id_car = queryParams.id_car;
-      }
-      if (queryParams.id_user) {
-        query.id_user = queryParams.id_user;
-      }
-      if (queryParams.final_value) {
-        query.final_value = queryParams.final_value;
-      }
-  
-      const reserves = await Reserve.find(query)
-        .skip((offset - 1) * limit)
-        .limit(limit);
-  
-      const totalReserves: number = await Reserve.countDocuments(query);
-  
-      if (reserves.length === 0) {
-        res.status(404).json({ message: 'No reserves found.' });
-      } else {
-        res.status(200).json({
-          data: {
-            total: totalReserves,
-            limit: limit,
-            offset: offset,
-            reserves: reserves,
-          },
-        });
-      }
-    } catch (err) {
-      res.status(500).json({ error: 'Error listing reserves.' });
-    }
-  };  
+  try {
+    const queryParams: any = req.query;
+    const limit: number = parseInt(queryParams.limit) || 100;
+    const offset: number = parseInt(queryParams.offset) || 1;
 
-  export const getReserveById = async (req: Request, res: Response): Promise<void> => {
-    const reserveId = req.params.id;
-  
-    try {
-      if (!isValidObjectId(reserveId)) {
-        res.status(404).json({ message: 'Reserve not found' });
-        return;
-      }
-  
-      const reserve: any | null = await Reserve.findById(reserveId);
-  
-      if (!reserve) {
-        res.status(404).json({ message: 'Reserve not found' });
-        return;
-      }
-  
-      res.status(200).json(reserve);
-    } catch (err) {
-      res.status(500).json({ error: 'Error retrieving reserve.' });
+    const query: any = {};
+    if (queryParams.start_date) {
+      query.start_date = { $gte: new Date(queryParams.start_date) };
     }
-  };
+    if (queryParams.end_date) {
+      query.end_date = { $lte: new Date(queryParams.end_date) };
+    }
+    if (queryParams.id_car) {
+      query.id_car = queryParams.id_car;
+    }
+    if (queryParams.id_user) {
+      query.id_user = queryParams.id_user;
+    }
+    if (queryParams.final_value) {
+      query.final_value = queryParams.final_value;
+    }
+
+    const reserves = await Reserve.find(query)
+      .skip((offset - 1) * limit)
+      .limit(limit);
+
+    const totalReserves: number = await Reserve.countDocuments(query);
+
+    if (reserves.length === 0) {
+      res.status(404).json({ message: 'No reserves found.' });
+    } else {
+      res.status(200).json({
+        data: {
+          total: totalReserves,
+          limit: limit,
+          offset: offset,
+          reserves: reserves,
+        },
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Error listing reserves.' });
+  }
+};
+
+export const getReserveById = async (req: Request, res: Response): Promise<void> => {
+  const reserveId = req.params.id;
+
+  try {
+    if (!isValidObjectId(reserveId)) {
+      res.status(404).json({ message: 'Reserve not found' });
+      return;
+    }
+
+    const reserve: any | null = await Reserve.findById(reserveId);
+
+    if (!reserve) {
+      res.status(404).json({ message: 'Reserve not found' });
+      return;
+    }
+
+    res.status(200).json(reserve);
+  } catch (err) {
+    res.status(500).json({ error: 'Error retrieving reserve.' });
+  }
+};
+
+export const updateReserve = async (req: Request, res: Response): Promise<void> => {
+  const reserveId = req.params.id;
+  const reserveData = req.body;
+
+  try {
+    if (!isValidObjectId(reserveId)) {
+      throw new APIError('id', 'Invalid reserve ID');
+    }
+
+    const reserveToUpdate = await Reserve.findById(reserveId);
+    if (!reserveToUpdate) {
+      res.status(404).json({ error: 'Reserve not found' });
+      return;
+    }
+
+    const carId = reserveToUpdate.id_car;
+    const userId = reserveToUpdate.id_user;
+    const currentDate = new Date();
+    const nextDay = new Date();
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    if (reserveToUpdate.start_date.toDateString() === currentDate.toDateString()) {
+      res.status(400).json({ error: 'Reserve cannot be updated if scheduled to start today' });
+      return;
+    }
+
+    if (reserveToUpdate.start_date.toDateString() === nextDay.toDateString()) {
+      res.status(400).json({ error: 'Reserve cannot be updated if scheduled to start tomorrow' });
+      return;
+    }
+
+    if (reserveData.start_date > reserveData.end_date) {
+      res.status(400).json({ error: 'end_date cannot be earlier than start_date' });
+      return;
+    }
+
+    const overlappingReserve = await Reserve.findOne({
+      id_car: carId,
+      $or: [
+        {
+          start_date: { $lte: reserveData.start_date },
+          end_date: { $gte: reserveData.start_date }
+        },
+        {
+          start_date: { $lte: reserveData.end_date },
+          end_date: { $gte: reserveData.end_date }
+        }
+      ]
+    });
+
+    if (overlappingReserve && overlappingReserve.id !== reserveId) {
+      res.status(400).json({ error: 'Car already has an overlapping reservation' });
+      return;
+    }
+
+    const userReserve = await Reserve.findOne({
+      id_user: userId,
+      $or: [
+        {
+          start_date: { $lte: reserveData.start_date },
+          end_date: { $gte: reserveData.start_date }
+        },
+        {
+          start_date: { $lte: reserveData.end_date },
+          end_date: { $gte: reserveData.end_date }
+        }
+      ]
+    });
+
+    if (userReserve && userReserve.id_car !== carId && userReserve.id !== reserveId) {
+      res.status(400).json({ error: 'User already has a reservation with another car within the specified date range' });
+      return;
+    }
+
+    const updatedReserve = await Reserve.findByIdAndUpdate(
+      reserveId,
+      { $set: reserveData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedReserve) {
+      res.status(404).json({ error: 'Reserve not found' });
+      return;
+    }
+
+    res.status(200).json({ data: updatedReserve });
+  } catch (err) {
+    APIError.handleErrorResponse(res, err);
+  }
+};
