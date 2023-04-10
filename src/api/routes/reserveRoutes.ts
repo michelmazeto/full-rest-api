@@ -3,10 +3,11 @@ import {
   createReserve,
   listAllReserves,
   getReserveById,
-  updateReserve
+  updateReserve,
+  deleteReserve
 } from '../controllers/reserveController';
 
-const reserveRouter = express.Router();
+const reserveRouter = express.Router(); 
 
 reserveRouter.route('/')
   .post(createReserve)
@@ -14,6 +15,7 @@ reserveRouter.route('/')
 
 reserveRouter.route('/:id')
   .get(getReserveById)
-  .patch(updateReserve);
+  .patch(updateReserve)
+  .delete(deleteReserve);
 
 export default reserveRouter;

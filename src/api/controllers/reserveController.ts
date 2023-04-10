@@ -233,3 +233,24 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
     APIError.handleErrorResponse(res, err);
   }
 };
+
+export const deleteReserve = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const reserveId: string = req.params.id;
+
+    if (!reserveId) {
+      res.status(400).json({ error: 'Reserve ID is required.' });
+      return;
+    }
+
+    const reserve = await Reserve.findByIdAndDelete(reserveId);
+
+    if (reserve) {
+      res.status(200).send();
+    } else {
+      res.status(404).json({ message: 'Reserve not found.' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Error deleting reserve.' });
+  }
+};
