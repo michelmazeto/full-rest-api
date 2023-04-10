@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { validateCPF } from '../services/validateCPF';
+import { validateCPF } from '../services/userServices';
 import { viaCep } from '../services/CEP';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
