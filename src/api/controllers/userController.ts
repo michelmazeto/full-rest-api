@@ -13,7 +13,6 @@ export async function createUser(req: Request, res: Response) {
     const token = generateToken({ id: savedUser._id });
     res.status(201).json({ user: savedUser, token });
   } catch (err) {
-    console.error(err);
     APIError.handleErrorResponse(res, err);
   }
 }

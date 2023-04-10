@@ -70,7 +70,6 @@ export const createReserve = async (req: Request, res: Response) => {
 
     return res.status(201).json({ message: 'Reservation created successfully', reserve });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({ message: 'Failed to create reservation' });
   }
 };
