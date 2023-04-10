@@ -1,4 +1,5 @@
 import express from 'express';
+import authMiddleware from '../services/authMiddleware';
 import {
   createReserve,
   listAllReserves,
@@ -10,12 +11,12 @@ import {
 const reserveRouter = express.Router(); 
 
 reserveRouter.route('/')
-  .post(createReserve)
-  .get(listAllReserves);
+  .post(authMiddleware, createReserve)
+  .get(authMiddleware, listAllReserves);
 
 reserveRouter.route('/:id')
-  .get(getReserveById)
-  .patch(updateReserve)
-  .delete(deleteReserve);
+  .get(authMiddleware, getReserveById)
+  .patch(authMiddleware, updateReserve)
+  .delete(authMiddleware, deleteReserve);
 
 export default reserveRouter;

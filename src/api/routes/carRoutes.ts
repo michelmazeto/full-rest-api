@@ -1,15 +1,23 @@
 import express from 'express';
-import { createCar, listAllCars, deleteCar, updateCar, getCarById } from '../controllers/carController';
+import authMiddleware from '../services/authMiddleware';
+import { 
+  createCar,
+  listAllCars,
+  deleteCar,
+  updateCar,
+  getCarById
+} from '../controllers/carController';
+
 
 const carRouter = express.Router();
 
 carRouter.route('/')
-  .post(createCar)
+  .post(authMiddleware, createCar)
   .get(listAllCars);
 
 carRouter.route('/:id')
-  .delete(deleteCar)
-  .patch(updateCar)
-  .get(getCarById);
+  .delete(authMiddleware, deleteCar)
+  .patch(authMiddleware, updateCar)
+  .get(authMiddleware, getCarById);
 
 export default carRouter;

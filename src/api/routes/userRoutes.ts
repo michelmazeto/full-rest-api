@@ -1,17 +1,23 @@
 import express from 'express';
-import { createUser, updateUser, deleteUser, getUserById, listAllUsers } from '../controllers/userController';
 import authController from '../controllers/authController';
+import authMiddleware from '../services/authMiddleware';
+import { createUser,
+  updateUser,
+  deleteUser,
+  getUserById,
+  listAllUsers
+} from '../controllers/userController';
 
 const userRouter = express.Router();
 
 userRouter.route('/')
-  .get(listAllUsers)
+  .get(authMiddleware, listAllUsers)
   .post(createUser);
 
 userRouter.route('/:id')
-  .patch(updateUser)
-  .delete(deleteUser)
-  .get(getUserById);
+  .patch(authMiddleware, updateUser)
+  .delete(authMiddleware, deleteUser)
+  .get(authMiddleware, getUserById);
 
 userRouter.route('/authenticate')
   .post(authController.authenticate);
