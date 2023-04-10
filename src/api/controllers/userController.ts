@@ -43,3 +43,24 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     APIError.handleErrorResponse(res, err);
   }
 };
+
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId: string = req.params.id;
+
+    if (!userId) {
+      res.status(400).json({ error: 'User ID is required.' });
+      return;
+    }
+
+    const user: IUser | null = await User.findByIdAndDelete(userId);
+
+    if (user) {
+      res.status(200).send();
+    } else {
+      res.status(404).json({ message: 'User not found.' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Error deleting user.' });
+  }
+};
