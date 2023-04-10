@@ -9,8 +9,17 @@ export const createReserve = async (req: Request, res: Response) => {
   try {
     const { start_date, end_date, id_car, id_user } = req.body;
 
+    const currentDate = new Date();
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
+
+    if (startDate < currentDate) {
+      return res.status(400).json({ message: 'Start date cannot be earlier than today' });
+    }
+
+    if (endDate < startDate) {
+      return res.status(400).json({ message: 'End date cannot be earlier than start date' });
+    }
 
     const user = await User.findById(id_user);
     if (!user) {
