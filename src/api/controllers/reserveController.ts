@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import Reserve from '../models/Reserve';
 import User from '../models/User';
 import Car from '../models/Car';
+import { isValidObjectId } from 'mongoose';
+import APIError from '../../utils/APIError';
 
 export const createReserve = async (req: Request, res: Response) => {
   try {
@@ -109,3 +111,25 @@ export const listAllReserves = async (req: Request, res: Response): Promise<void
       res.status(500).json({ error: 'Error listing reserves.' });
     }
   };  
+
+  export const getReserveById = async (req: Request, res: Response): Promise<void> => {
+    const reserveId = req.params.id;
+  
+    try {
+      if (!isValidObjectId(reserveId)) {
+        res.status(404).json({ message: 'Reserve not found' });
+        return;
+      }
+  
+      const reserve: any | null = await Reserve.findById(reserveId);
+  
+      if (!reserve) {
+        res.status(404).json({ message: 'Reserve not found' });
+        return;
+      }
+  
+      res.status(200).json(reserve);
+    } catch (err) {
+      res.status(500).json({ error: 'Error retrieving reserve.' });
+    }
+  };
