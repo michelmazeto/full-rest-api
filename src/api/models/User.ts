@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { validateCPF } from '../services/userServices';
+import { validateCPF, validateCEP } from '../services/userServices';
 import { viaCep } from '../services/userServices';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
@@ -88,6 +88,10 @@ const userSchema: Schema = new Schema<IUser>({
   cep: {
     type: String,
     required: [true, 'A user must have a CEP'],
+    validate: {
+      validator: validateCEP,
+      message: 'Invalid CEP format or number'
+    },
     trim: true
   },
   logradouro: {
