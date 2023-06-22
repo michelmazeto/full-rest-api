@@ -37,6 +37,8 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    await updatedUser.viaCep();
+
     res.status(200).json({ data: updatedUser });
   } catch (err) {
     APIError.handleErrorResponse(res, err);
