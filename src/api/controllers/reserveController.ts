@@ -9,9 +9,17 @@ export const createReserve = async (req: Request, res: Response) => {
   try {
     const { start_date, end_date, id_car, id_user } = req.body;
 
+    const startDateParts = start_date.split('/');
+    const endDateParts = end_date.split('/');
+
+    const startDate = new Date(`${startDateParts[2]}-${startDateParts[1]}-${startDateParts[0]}`);
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    const endDate = new Date(`${endDateParts[2]}-${endDateParts[1]}-${endDateParts[0]}`);
+    endDate.setUTCHours(0, 0, 0, 0);
+
     const currentDate = new Date();
-    const startDate = new Date(start_date);
-    const endDate = new Date(end_date);
+    currentDate.setUTCHours(0, 0, 0, 0);
 
     if (startDate < currentDate) {
       return res.status(400).json({ message: 'Start date cannot be earlier than today' });
@@ -73,6 +81,7 @@ export const createReserve = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Failed to create reservation' });
   }
 };
+
 
 export const listAllReserves = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -159,9 +168,23 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
 
     const carId = reserveToUpdate.id_car;
     const userId = reserveToUpdate.id_user;
+
     const currentDate = new Date();
+    currentDate.setUTCHours(0, 0, 0, 0);
+
     const nextDay = new Date();
+    nextDay.setUTCHours(0, 0, 0, 0);
+
     nextDay.setDate(nextDay.getDate() + 1);
+
+    const startDateParts = reserveData.start_date.split('/');
+    const endDateParts = reserveData.end_date.split('/');
+
+    const startDate = new Date(`${startDateParts[2]}-${startDateParts[1]}-${startDateParts[0]}`);
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    const endDate = new Date(`${endDateParts[2]}-${endDateParts[1]}-${endDateParts[0]}`);
+    endDate.setUTCHours(0, 0, 0, 0);
 
     if (reserveToUpdate.start_date.toDateString() === currentDate.toDateString()) {
       res.status(400).json({ error: 'Reserve cannot be updated if scheduled to start today' });
@@ -173,7 +196,7 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (reserveData.start_date > reserveData.end_date) {
+    if (startDate > endDate) {
       res.status(400).json({ error: 'end_date cannot be earlier than start_date' });
       return;
     }
@@ -182,12 +205,12 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
       id_car: carId,
       $or: [
         {
-          start_date: { $lte: reserveData.start_date },
-          end_date: { $gte: reserveData.start_date }
+          start_date: { $lte: startDate },
+          end_date: { $gte: startDate }
         },
         {
-          start_date: { $lte: reserveData.end_date },
-          end_date: { $gte: reserveData.end_date }
+          start_date: { $lte: endDate },
+          end_date: { $gte: endDate }
         }
       ]
     });
@@ -201,12 +224,12 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
       id_user: userId,
       $or: [
         {
-          start_date: { $lte: reserveData.start_date },
-          end_date: { $gte: reserveData.start_date }
+          start_date: { $lte: startDate },
+          end_date: { $gte: startDate }
         },
         {
-          start_date: { $lte: reserveData.end_date },
-          end_date: { $gte: reserveData.end_date }
+          start_date: { $lte: endDate },
+          end_date: { $gte: endDate }
         }
       ]
     });
@@ -218,7 +241,7 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
 
     const updatedReserve = await Reserve.findByIdAndUpdate(
       reserveId,
-      { $set: reserveData },
+      { $set: { start_date: startDate, end_date: endDate, ...reserveData } },
       { new: true, runValidators: true }
     );
 
