@@ -14,7 +14,7 @@ describe('Car model', () => {
         description: 'Accessory 2'
       }
     ],
-    number_of_passengers: 4
+    number_of_passengers: 5
   };
 
   it('should create a valid car object', () => {
