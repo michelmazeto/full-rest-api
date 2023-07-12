@@ -4,6 +4,7 @@ import User from '../models/User';
 import Car from '../models/Car';
 import { isValidObjectId } from 'mongoose';
 import APIError from '../../utils/APIError';
+import mongoose from 'mongoose';
 
 export const createReserve = async (req: Request, res: Response) => {
   try {
@@ -156,7 +157,7 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
   const reserveData = req.body;
 
   try {
-    if (!isValidObjectId(reserveId)) {
+    if (!mongoose.isValidObjectId(reserveId)) {
       throw new APIError('id', 'Invalid reserve ID');
     }
 
@@ -174,16 +175,18 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
 
     const nextDay = new Date();
     nextDay.setUTCHours(0, 0, 0, 0);
-
     nextDay.setDate(nextDay.getDate() + 1);
 
     const startDateParts = reserveData.start_date.split('/');
     const endDateParts = reserveData.end_date.split('/');
 
-    const startDate = new Date(`${startDateParts[2]}-${startDateParts[1]}-${startDateParts[0]}`);
+    const startDateISO = `${startDateParts[2]}-${startDateParts[1]}-${startDateParts[0]}`;
+    const endDateISO = `${endDateParts[2]}-${endDateParts[1]}-${endDateParts[0]}`;
+
+    const startDate = new Date(startDateISO);
     startDate.setUTCHours(0, 0, 0, 0);
 
-    const endDate = new Date(`${endDateParts[2]}-${endDateParts[1]}-${endDateParts[0]}`);
+    const endDate = new Date(endDateISO);
     endDate.setUTCHours(0, 0, 0, 0);
 
     if (reserveToUpdate.start_date.toDateString() === currentDate.toDateString()) {
