@@ -4,22 +4,18 @@ import User from '../models/User';
 import Car from '../models/Car';
 import { isValidObjectId } from 'mongoose';
 import APIError from '../../utils/APIError';
+import moment from 'moment';
 
 export const createReserve = async (req: Request, res: Response) => {
   try {
     const { start_date, end_date, id_car, id_user } = req.body;
 
-    const startDateParts = start_date.split('/');
-    const endDateParts = end_date.split('/');
+    const startDate = moment(start_date, 'YYYY-MM-DD').utc().startOf('day').toDate();
+    const endDate = moment(end_date, 'YYYY-MM-DD').utc().startOf('day').toDate();
+    const currentDate = moment().utc().startOf('day').toDate();
 
-    const startDate = new Date(`${startDateParts[2]}-${startDateParts[1]}-${startDateParts[0]}`);
-    startDate.setUTCHours(0, 0, 0, 0);
-
-    const endDate = new Date(`${endDateParts[2]}-${endDateParts[1]}-${endDateParts[0]}`);
-    endDate.setUTCHours(0, 0, 0, 0);
-
-    const currentDate = new Date();
-    currentDate.setUTCHours(0, 0, 0, 0);
+    console.log(startDate);
+    console.log(endDate);
 
     if (startDate < currentDate) {
       return res.status(400).json({ message: 'Start date cannot be earlier than today' });
@@ -63,7 +59,7 @@ export const createReserve = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'User already has another reservation for the same period' });
     }
 
-    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const days = moment(endDate).diff(startDate, 'days');
     const final_value = days * car.value_per_day;
 
     const reserve = new Reserve({
@@ -81,7 +77,6 @@ export const createReserve = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Failed to create reservation' });
   }
 };
-
 
 export const listAllReserves = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -169,22 +164,11 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
     const carId = reserveToUpdate.id_car;
     const userId = reserveToUpdate.id_user;
 
-    const currentDate = new Date();
-    currentDate.setUTCHours(0, 0, 0, 0);
+    const currentDate = moment().utc().startOf('day').toDate();
+    const nextDay = moment().utc().add(1, 'day').startOf('day').toDate();
 
-    const nextDay = new Date();
-    nextDay.setUTCHours(0, 0, 0, 0);
-
-    nextDay.setDate(nextDay.getDate() + 1);
-
-    const startDateParts = reserveData.start_date.split('/');
-    const endDateParts = reserveData.end_date.split('/');
-
-    const startDate = new Date(`${startDateParts[2]}-${startDateParts[1]}-${startDateParts[0]}`);
-    startDate.setUTCHours(0, 0, 0, 0);
-
-    const endDate = new Date(`${endDateParts[2]}-${endDateParts[1]}-${endDateParts[0]}`);
-    endDate.setUTCHours(0, 0, 0, 0);
+    const startDate = moment(req.body.start_date, 'YYYY-MM-DD').utc().startOf('day').toDate();
+    const endDate = moment(req.body.end_date, 'YYYY-MM-DD').utc().startOf('day').toDate();
 
     if (reserveToUpdate.start_date.toDateString() === currentDate.toDateString()) {
       res.status(400).json({ error: 'Reserve cannot be updated if scheduled to start today' });
