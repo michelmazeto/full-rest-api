@@ -14,9 +14,6 @@ export const createReserve = async (req: Request, res: Response) => {
     const endDate = moment(end_date, 'YYYY-MM-DD').utc().startOf('day').toDate();
     const currentDate = moment().utc().startOf('day').toDate();
 
-    console.log(startDate);
-    console.log(endDate);
-
     if (startDate < currentDate) {
       return res.status(400).json({ message: 'Start date cannot be earlier than today' });
     }
@@ -59,7 +56,7 @@ export const createReserve = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'User already has another reservation for the same period' });
     }
 
-    const days = moment(endDate).diff(startDate, 'days');
+    const days = 1 + moment(endDate).diff(startDate, 'days');
     const final_value = days * car.value_per_day;
 
     const reserve = new Reserve({
@@ -170,6 +167,10 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
     const startDate = moment(req.body.start_date, 'YYYY-MM-DD').utc().startOf('day').toDate();
     const endDate = moment(req.body.end_date, 'YYYY-MM-DD').utc().startOf('day').toDate();
 
+    const days = 1 + moment(endDate).diff(startDate, 'days');
+    const car = await Car.findById(reserveToUpdate.id_car);
+    const final_value = days * (car?.value_per_day ?? 0);
+
     if (reserveToUpdate.start_date.toDateString() === currentDate.toDateString()) {
       res.status(400).json({ error: 'Reserve cannot be updated if scheduled to start today' });
       return;
@@ -225,7 +226,7 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
 
     const updatedReserve = await Reserve.findByIdAndUpdate(
       reserveId,
-      { $set: { start_date: startDate, end_date: endDate, ...reserveData } },
+      { $set: { start_date: startDate, end_date: endDate, ...reserveData, final_value: final_value } },
       { new: true, runValidators: true }
     );
 
