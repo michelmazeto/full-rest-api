@@ -181,6 +181,11 @@ export const updateReserve = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    if (startDate < currentDate) {
+      res.status(400).json({ error: `The start date cannot be a day before today ${startDate} ${currentDate}` });
+      return;
+    }
+
     if (startDate > endDate) {
       res.status(400).json({ error: 'end_date cannot be earlier than start_date' });
       return;
